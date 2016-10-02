@@ -50,24 +50,29 @@ int main(int argc , char *argv[])
     
     
 		////////////
-		/*  Send an integer
-			int32_t conv = htonl(230);
-			char *data = (char*)&conv;
-			int left = sizeof(conv);
-			int rc;
-			do {
-				rc = write(client_sock, data, left);
-				data += rc;
-				left -= rc;
-			}
-			while (left > 0);
-		*/
+
+		// Komen salah satu untuk mencoba nya
+
+
+		// Send an integer
+		int32_t conv = htonl(230);
+		char *data = (char*)&conv;
+		int left = sizeof(conv);
+		int rc;
+		do {
+			rc = write(client_sock, data, left);
+			data += rc;
+			left -= rc;
+		}
+		while (left > 0);
+
     
-		
-		int32_t conv[3];
-		conv[0] = htonl(230);
-		conv[1] = htonl(150);
-		conv[2] = htonl(350);
+		// Send array of integer		
+		//int32_t conv[3];
+		int_fast64_t conv[3];
+		conv[0] = htonl(123456789);
+		conv[1] = htonl(999876527);
+		conv[2] = htonl(292839928);
 		
 		char *data;
 		
@@ -82,8 +87,37 @@ int main(int argc , char *argv[])
 			}
 			while (left > 0);
 		}
+	
 		
-    
+		// Send array of string
+		char* conv[3];
+		conv[0] = "hello, world!\0";
+		conv[1] = "thx for coming. btw this is a very 12345 long string\0";
+		conv[2] = "this is a sample text\0";
+		
+		int left;
+		
+		for (int idx = 0; idx < 3; idx++) {
+			int pjg_conv = strlen(conv[idx])+1;
+			int ln = write(client_sock, (char*)&pjg_conv, sizeof(pjg_conv));
+			
+			
+			do {
+				left = strlen(conv[idx]) + 1; 
+				int rc = write(client_sock, conv[idx], left);
+				
+				printf("%d - %d\n", rc, left);
+				
+				conv[idx] += rc;
+				left -= rc;
+			
+				printf("now: %s - %d\n", conv[idx], left);
+				
+			}
+			while (left > 0);
+		}
+	
+		
     /////////////////
     
     
@@ -99,5 +133,8 @@ int main(int argc , char *argv[])
         perror("recv failed");
     }
      
+    close(socket_desc);
+    close(client_sock); 
+    
     return 0;
 }
