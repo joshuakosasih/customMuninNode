@@ -6,13 +6,23 @@
  * - receives data resource from plugin
  * - send the data resource to munin-master
  */
- 
+#include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
 #include "plugins/memory.h"
 
 int main(int argc, char** argv) {
+	
+	// get hostname
+	char hostname[100]; //magic number
+	int result;
+	result = gethostname(hostname, 100); //magic number
+	if (result == 0) {
+		printf("You are logged in to: %s\n", hostname);
+	} else {
+		printf("Error: cannot get hostname\n");	
+	}
 	
 	/*
 	 * TODO:
