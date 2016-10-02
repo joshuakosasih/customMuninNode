@@ -38,7 +38,19 @@ int main(int argc, char** argv) {
 	char* config_result[12];
 	int_fast64_t* fetch_result;
 	
-	if (strcmp(argv[1], "config") == 0) {
+	if (strcmp(argv[1], "cap") == 0) {
+		
+		
+		
+	} else if (strcmp(argv[1], "nodes") == 0) {
+			  
+		
+		
+	} else if (strcmp(argv[1], "list") == 0) {
+		
+		
+	
+	} else if (strcmp(argv[1], "config") == 0) {
 		
 		// call memory plugin to get the config data
 		CONFIG_MEMORY(config_result);
@@ -54,7 +66,7 @@ int main(int argc, char** argv) {
 		// ...
 		
 		
-	} else if (strcmp(argv[1], "fetch") == 0)  {
+	} else if (strcmp(argv[1], "fetch") == 0) {
 		
 		// call memory plugin to get the fetch data
 		fetch_result = FETCH_MEMORY();
@@ -68,6 +80,18 @@ int main(int argc, char** argv) {
 
 		// TODO - send the fetch_result through socket
 		// ...
+		
+
+	} else if (strcmp(argv[1], "version") == 0) {
+		
+		
+		
+	} else if (strcmp(argv[1], "quit") == 0) {
+			  
+		
+		
+	} else {
+		
 		
 		
 	}
