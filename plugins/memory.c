@@ -157,7 +157,7 @@ void CONFIG_MEMORY(char* config_result[]) {
 	config_result[8] = "used.info Used memory.\n";
 	config_result[9] = "free.label free\n";
 	config_result[10] = "free.draw STACK\n";
-	config_result[11] = "free.info Free memory\n.";
+	config_result[11] = "free.info Free memory.\n";
 	
 }
 

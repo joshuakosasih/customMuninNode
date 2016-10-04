@@ -8,6 +8,8 @@
  
 #include "plugins/memory.h"
 
+
+
 // Cara compile gcc -pthread -o server-th server-th.c plugins/memory.c
 
 
@@ -91,7 +93,6 @@ void *connection_handler(void *socket_desc)
     // Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
-    //char *message ,client_message[2000];
     char *message;
     char client_message[2000];
      
@@ -104,10 +105,7 @@ void *connection_handler(void *socket_desc)
     write(sock , message , strlen(message));
     
     
-    
-    
     // Get hostname & send banner
-    
     char hostname[200];
     //char* banner = strdup("# munin node at ");
 	char banner[] = "# munin node at ";
@@ -124,24 +122,26 @@ void *connection_handler(void *socket_desc)
 		puts("Error: cannot get hostname");
     }
  
+ 
+    
+    // special case for list => input: list or list hostname
+    char list_full_msg[10];
+    sprintf(list_full_msg, "%s%s%s", "list ", hostname, "\n");
+    
     
     
     // Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {
-        //Send the message back to client
+        
+        // Send the message back to client
     
 		
 		char* config_result[12];
 		
 		if (strcmp(client_message, "cap\n") == 0) {
 			
-			//char str[100] = "\0";
-			char str[] = "cap multigraph dirtyconfig";
-			//strcat(str, "cap multigraph dirtyconfig");
-			//strcat(str, "\n");
-			
-			if (send(sock, str, strlen(str), 0) < 0) {
+			if (send(sock, "cap multigraph dirtyconfig\0\n", strlen("cap multigraph dirtyconfig") + 2, 0) < 0) {
 				printf("Send failed\n");
 				exit(-1);
 			}	
@@ -150,26 +150,49 @@ void *connection_handler(void *socket_desc)
 		
 		else if (strcmp(client_message, "nodes\n") == 0) {
 
-			//char nodes_msg[20] = "\0";
 			
-			char nodes_msg[20];
+			char nodes_msg[50];
 			
-			strcat(nodes_msg, hostname);
-			//strcat(nodes_msg, "\n.");
-
-			if (send(sock, nodes_msg, strlen(nodes_msg) + 1, 0) < 0) {
+			sprintf(nodes_msg, "%s", hostname);
+			
+			if (send(sock, nodes_msg, strlen(nodes_msg), 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}		
+			
+			
+			if (send(sock, "\n.\0\n", 4, 0) < 0) {
 				printf("Send failed\n");
 				exit(-1);
 			}		
 			
 		}
 
-		else if (strcmp(client_message, "list\n") == 0) {
+		else if (strcmp(client_message, "list\n") == 0 || strcmp(client_message, list_full_msg) == 0) {
 		
+		
+			// lists items available for gathering for this host.
+			// E.g. load, cpu, memory, df, etalia.
+			// If no host is given, default to host that runs the munin-node
+		
+			char list_msg[10];
+			
+			sprintf(list_msg, "%s", "memory");
+		
+			if (send(sock, list_msg, strlen(list_msg), 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}		
+			
+			
+			if (send(sock, "\n", 1, 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}		
 		
 	
 		}
-		
+	
 		else if (strcmp(client_message, "config memory\n") == 0) {
 			// call memory plugin to get the config data
 			CONFIG_MEMORY(config_result);
@@ -185,7 +208,12 @@ void *connection_handler(void *socket_desc)
 				}
 				
 			}
-		
+			
+			if (send(sock, ".\0\n", 3, 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}
+			
 		}
 		
 		else if (strcmp(client_message, "fetch memory\n") == 0) {
@@ -194,7 +222,7 @@ void *connection_handler(void *socket_desc)
 			int_fast64_t fetch_result[3];
 			FETCH_MEMORY(fetch_result);
 
-			char fetch_str[20];
+			char fetch_str[50];
 			char* fetch_msg[3];
 
 			fetch_msg[0] = "total.value ";
@@ -206,17 +234,24 @@ void *connection_handler(void *socket_desc)
 				printf("FETCHED %d - %ld\n", i, fetch_result[i]);
 			
 				sprintf(fetch_str, "%s%ld", fetch_msg[i], fetch_result[i]);
-				
-				printf("fetch_str: %s\n", fetch_str);
-					
-				strcat(fetch_str, "\n");
-				
+				sprintf(fetch_str, "%s%s", fetch_str, "\0");
 				
 				if (send(sock, fetch_str, strlen(fetch_str)+1, 0) < 0) {
 					printf("Send failed\n");
-					return 1;
+					exit(-1);
+				}
+				
+				
+				if (send(sock, "\n", strlen("\n")+1, 0) < 0) {
+					printf("Send failed\n");
+					exit(-1);
 				}
 			
+			}
+					
+			if (send(sock, ".\n", 2, 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
 			}
 				
 		}
@@ -224,17 +259,20 @@ void *connection_handler(void *socket_desc)
 		else if (strcmp(client_message, "version\n") == 0) {
 		
 
-			//char* version_msg = strdup("Crazy node on ");
-			
-			char version_msg[] = "Crazy node on ";
-			strcat(version_msg, hostname);
-			strcat(version_msg, " version: 0.1");
+			char version_msg[100];
 
-			if (send(sock, version_msg, strlen(version_msg), 0) < 0) {
+			sprintf(version_msg, "%s%s%s", "Crazy node on ", hostname, " version: 0.1\0");
+
+			if (send(sock, version_msg, strlen(version_msg) + 1, 0) < 0) {
 				printf("Send failed\n");
 				exit(-1);
 			}		
-		
+			
+			
+			if (send(sock, "\n", strlen("\n") + 1, 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}		
 		} 
 		
 		else if (strcmp(client_message, "quit\n") == 0) {
@@ -242,6 +280,11 @@ void *connection_handler(void *socket_desc)
 			char quit_msg[] = "bye";
 			
 			if (send(sock, quit_msg, strlen(quit_msg), 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}
+
+			if (send(sock, "\n", 1, 0) < 0) {
 				printf("Send failed\n");
 				exit(-1);
 			}
@@ -256,23 +299,24 @@ void *connection_handler(void *socket_desc)
 		
 		else {
 			
-			printf("WORD: %s\n", client_message);
-			
-			char unknown_msg[] = "# Unknown command. Try cap, list, nodes, config, fetch, version or quit";
+			char unknown_msg[100];
 	
-			if (send(sock, unknown_msg, strlen(unknown_msg), 0) < 0) {
+			sprintf(unknown_msg, "%s", "# Unknown command. Try cap, list, nodes, config, fetch, version or quit\0");
+	
+			if (send(sock, unknown_msg, strlen(unknown_msg) + 2, 0) < 0) {
 				printf("Send failed\n");
 				exit(-1);
 			}	
 			
+			
+			if (send(sock, "\n", strlen("\n") + 1, 0) < 0) {
+				printf("Send failed\n");
+				exit(-1);
+			}	
 		}
 		
-		//char nl[] = "\n";
 		
-		if (send(sock, "\n", strlen("\n"), 0) < 0) {
-			printf("Send failed\n");
-			exit(-1);
-		}	
+		memset(client_message, 0, sizeof(client_message));
 		 
     }
     
