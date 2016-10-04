@@ -14,7 +14,8 @@ void error(char *msg)
 
 int main(int argc, char *argv[])
 {
-     int sockfd, newsockfd, portno, clilen;
+     int sockfd, newsockfd, portno;
+     socklen_t clilen;
      char buffer[256];
      struct sockaddr_in serv_addr, cli_addr;
      int n;
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
      /*
      portno = atoi(argv[1]);
      */
-     portno = 4949;
+     portno = 4951;
      serv_addr.sin_family = AF_INET;
      serv_addr.sin_addr.s_addr = INADDR_ANY;
      serv_addr.sin_port = htons(portno);
