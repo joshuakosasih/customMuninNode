@@ -68,6 +68,14 @@ int main(int argc , char *argv[])
 
     char* dot_msg = strdup(".\n");
 
+    char* list_msg = strdup("list ");
+    strcat(list_msg, hostname);
+    strcat(list_msg, "\n");
+    
+    char* listc_msg = strdup("memory\n");
+
+    char* config_msg = strdup("# Unknown service\n.\n");
+
     char* quit_msg = strdup("bye\n");
 
     char* unknown_msg = strdup("# Unknown command. Try cap, list, nodes, config, fetch, version or quit\n");
@@ -81,25 +89,42 @@ int main(int argc , char *argv[])
 	char* config_result[12];
 	int_fast64_t* fetch_result;
 	
-	if (strcmp(client_message, "cap\n") == 0) {
+	if (strcmp(client_message, "cap\n") == 0) { // cap
 		
 		if (send(client_sock, cap_msg, strlen(cap_msg)+1, 0) < 0) {
 			printf("Send failed\n");
 			return 1;
 		}	
 		
-	} else if (strcmp(client_message, "nodes\n") == 0) {
+	} else if (strcmp(client_message, "nodes\n") == 0) { // nodes
 
 		if (send(client_sock, nodes_msg, strlen(nodes_msg)+2, 0) < 0) {
 			printf("Send failed\n");
 			return 1;
 		}		
+
+	} else if (strcmp(client_message, "list\n") == 0) { // list
 		
-	} else if (strcmp(client_message, "list\n") == 0) {
-		
-		
+		if (send(client_sock, "\n", 1, 0) < 0) {
+			printf("Send failed\n");
+			return 1;
+		}
 	
-	} else if (strcmp(client_message, "config memory\n") == 0) {
+	} else if (strcmp(client_message, list_msg) == 0) { // list <hostname>
+		
+		if (send(client_sock, listc_msg, strlen(listc_msg)+1, 0) < 0) {
+			printf("Send failed\n");
+			return 1;
+		}
+	
+	} else if (strcmp(client_message, "config\n") == 0) { // config
+
+		if (send(client_sock, config_msg, strlen(config_msg)+2, 0) < 0) {
+			printf("Send failed\n");
+			return 1;
+		}	
+
+	} else if (strcmp(client_message, "config memory\n") == 0) { //config memory
 		
 		// call memory plugin to get the config data
 		CONFIG_MEMORY(config_result);
@@ -144,7 +169,7 @@ printf("sending message %d\n", i);
 			}
 		}
 */
-	} else if (strcmp(client_message, "version\n") == 0) {
+	} else if (strcmp(client_message, "version\n") == 0) { // version
 		
 
 		char* version_msg = strdup("Crazy node on ");
@@ -156,7 +181,7 @@ printf("sending message %d\n", i);
 			return 1;
 		}		
 		
-	} else if (strcmp(client_message, "quit\n") == 0) {
+	} else if (strcmp(client_message, "quit\n") == 0) { // quit
 
 		if (send(client_sock, quit_msg, strlen(quit_msg)+1, 0) < 0) {
 			printf("Send failed\n");
@@ -169,91 +194,14 @@ printf("sending message %d\n", i);
 		puts("Connection closed by client");
 		return 0;
 
-	} else {
+	} else { // <unknown commands>
 		
 		if (send(client_sock, unknown_msg, strlen(unknown_msg)+1, 0) < 0) {
 			printf("Send failed\n");
 			return 1;
-		}	
+		}
 		
 	}
-
-        // Send the message back to client
-    
-    
-		////////////
-
-		// Komen salah satu untuk mencoba nya
-/*
-
-		// Send an integer
-		int32_t conv = htonl(230);
-		char *data = (char*)&conv;
-		int left = sizeof(conv);
-		int rc;
-		do {
-			rc = write(client_sock, data, left);
-			data += rc;
-			left -= rc;
-		}
-		while (left > 0);
-
-    
-		// Send array of integer		
-		//int32_t conv[3];
-		int_fast64_t conv[3];
-		conv[0] = htonl(123456789);
-		conv[1] = htonl(999876527);
-		conv[2] = htonl(292839928);
-		
-		char *data;
-		
-		for (int idx = 0; idx < 3; idx++) {
-			data = (char*)&conv[idx];
-			int left = sizeof(conv[idx]);
-			int rc;
-			do {
-				rc = write(client_sock, data, left);
-				data += rc;
-				left -= rc;
-			}
-			while (left > 0);
-		}
-	*/
-		
-		// Send array of string
-/*
-		char* conv[4];
-		conv[0] = "hello, world!\n";
-		conv[1] = "thx for coming. btw this is a very 12345 long string\n";
-		conv[2] = "this is a sample text\n";
-		conv[3] = "Bye!\n";
-		
-		int left;
-
-		if (strcmp(client_message, "cap\n") == 0) {
-			conv[0] = "cap multigraph dirtyconfig\n";
-		}
-		else if (strcmp(client_message, "quit\n") == 0) {
-			if (send(client_sock, conv[3], strlen(conv[3])+1, 0) < 0) {
-				printf("Send failed\n");
-				return 1;
-			}
-			close(socket_desc);
-    			close(client_sock);
-			printf("All closed");
-			return 1;
-		}
-		
-		for (int idx = 0; idx < 3; idx++) {
-			int pjg_conv = strlen(conv[idx])+1;
-
-			if (send(client_sock, conv[idx], pjg_conv, 0) < 0) {
-				printf("Send failed\n");
-				return 1;
-			}
-		}
-*/
 
 	memset(client_message, 0, sizeof client_message);
 	
