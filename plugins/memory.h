@@ -7,9 +7,7 @@
 #define MEMORY_H
 
 void fail(const char *message);
-
+void FETCH_MEMORY(int_fast64_t fetch[]);
 void CONFIG_MEMORY(char* config_result[]);
-
-int_fast64_t* FETCH_MEMORY();
 
 #endif
