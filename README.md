@@ -8,4 +8,4 @@
 </ul>
 
 ### Compile
-gcc -pthread -o <exe-file> server-th.c plugins/memory.c 
+gcc -pthread -o {exe-file} server-th.c plugins/memory.c 
